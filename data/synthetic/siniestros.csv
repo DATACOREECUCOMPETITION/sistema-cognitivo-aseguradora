@@ -1,3 +1,2 @@
 claim_id,poliza_id,asegurado_id,proveedor_id,ramo,fecha_siniestro,fecha_inicio_poliza,fecha_fin_poliza,fecha_reporte,monto_reclamado,lat_siniestro,lon_siniestro,severidad,narrativa_libre
-CLM-2026-901,POL-9001,ASEG-9001,PROV-9001,VEHICULOS,2026-05-11,2026-05-01,2027-05-01,2026-05-13,1200.0,-0.18,-78.46,LOW,Siniestro de prueba sintético sin heridos graves ni discrepancias complejas de control.
-CLM-2026-902,POL-9002,ASEG-9002,PROV-9002,SALUD,2026-05-12,2026-01-10,2026-12-31,2026-05-14,850.0,-0.18,-78.46,LOW,Atención médica general programada simulada para validación del portafolio.
+CLM-2026-901,POL-9001,ASEG-9001,PROV-9001,VEHICULOS,2026-05-11,2026-05-01,2027-05-01,2026-05-13,1200.0,-0.18,-78.46,LOW,Siniestro de prueba sintético sin inconsistencias graves.

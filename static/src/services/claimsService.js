@@ -158,6 +158,46 @@ class ClaimsService {
   }
 
   /**
+   * Procesa un escaneo rápido de siniestro a partir de un PDF.
+   * 
+   * @param {File} file Archivo PDF del siniestro.
+   * @param {boolean} bypassGemini Forzar contingencia local.
+   * @returns {Promise<Object>} Resultado de la creación.
+   */
+  static async quickScanClaim(file, bypassGemini = false) {
+    const url = `${this.BASE_URL}/claims/quick-scan`;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bypass_gemini', String(bypassGemini));
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Error en el servidor (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData && errData.detail) {
+            errorMessage = errData.detail;
+          }
+        } catch (e) {
+          // Ignorar
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`[ClaimsService.quickScanClaim] Fallo en el escaneo rápido:`, error);
+      throw new Error(error.message || 'Error de red al realizar el escaneo rápido.');
+    }
+  }
+
+  /**
    * Obtiene los catálogos y siguientes IDs autogenerados consistentes desde el backend.
    * 
    * @returns {Promise<Object>} Catálogos de proveedores y próximos IDs.

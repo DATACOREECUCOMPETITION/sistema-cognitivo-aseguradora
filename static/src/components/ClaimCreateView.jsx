@@ -139,14 +139,9 @@ window.ClaimCreateView = function ClaimCreateView({ onAnalyzeEnd, bypassGemini =
 
       const response = await window.ClaimsService.createClaimWithEvidence(payload);
       if (response && response.status === 'success') {
-        // Guardar el ID creado en el estado global del padre
-        if (setGlobalClaimId) {
-          setGlobalClaimId(formData.claim_id);
-        }
-        // Redireccionar al panel de análisis
-        if (setActiveView) {
-          setActiveView('analysis');
-        }
+        // Guardar en sessionStorage para que App.jsx lo cargue y haga un F5 real
+        sessionStorage.setItem('defaultClaimId', formData.claim_id);
+        window.location.reload();
       } else {
         setFormError('El servidor no devolvió una confirmación exitosa.');
       }

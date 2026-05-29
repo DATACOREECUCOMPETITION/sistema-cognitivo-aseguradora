@@ -1,7 +1,9 @@
 window.App = function App() {
   const [analyzedClaim, setAnalyzedClaim] = React.useState(null);
   const [activeView, setActiveView] = React.useState('analysis'); // 'analysis', 'chat' o 'create_claim'
-  const [globalClaimId, setGlobalClaimId] = React.useState('CLM-2026-001');
+  const [globalClaimId, setGlobalClaimId] = React.useState(() => {
+    return sessionStorage.getItem('defaultClaimId') || 'CLM-2026-001';
+  });
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [bypassGemini, setBypassGemini] = React.useState(false);
   const [showTechnicalModal, setShowTechnicalModal] = React.useState(false);
@@ -16,6 +18,11 @@ window.App = function App() {
       setGlobalClaimId(result.claim_id);
     }
   };
+
+  // Sincronizar el globalClaimId con sessionStorage para persistencia ante F5
+  React.useEffect(() => {
+    sessionStorage.setItem('defaultClaimId', globalClaimId);
+  }, [globalClaimId]);
 
   // Cierra el menú desplegable si se hace clic fuera del contenedor (para una UX premium)
   React.useEffect(() => {
@@ -39,6 +46,8 @@ window.App = function App() {
         return 'Peritaje Conversacional (Chat)';
       case 'create_claim':
         return 'Registro de Nuevo Siniestro';
+      case 'quick_scan':
+        return 'Escaneo Rápido (PDF)';
       case 'handwriting_analysis':
         return 'Análisis de Caligrafía';
       default:
@@ -137,6 +146,22 @@ window.App = function App() {
                     <div>
                       <p className="font-bold text-theme-textPrimary">Registrar Siniestro</p>
                       <p className="text-[9px] text-theme-textMuted font-medium">Ingresar Caso de Prueba Semilla</p>
+                    </div>
+                  </button>
+
+                  {/* Opción Escaneo Rápido */}
+                  <button
+                    onClick={() => setActiveView('quick_scan')}
+                    className={`w-full px-4 py-3 text-left text-xs flex items-center gap-3 hover:bg-theme-bg transition-all ${activeView === 'quick_scan' ? 'text-theme-textPrimary bg-theme-bg/50' : 'text-theme-textSecondary'}`}
+                  >
+                    <div className={`p-1.5 rounded-lg ${activeView === 'quick_scan' ? 'bg-theme-bg text-theme-textPrimary' : 'bg-transparent text-theme-textMuted'}`}>
+                      <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-theme-textPrimary">Escaneo Rápido (PDF)</p>
+                      <p className="text-[9px] text-theme-textMuted font-medium">Carga Automatizada por IA</p>
                     </div>
                   </button>
 
@@ -253,6 +278,18 @@ window.App = function App() {
             // VISTA 3: REGISTRO DE NUEVO SINIESTRO SEMILLA
             <div className="w-full">
               <window.ClaimCreateView 
+                onAnalyzeEnd={handleAnalyzeEnd}
+                bypassGemini={bypassGemini}
+                setActiveView={setActiveView}
+                setGlobalClaimId={setGlobalClaimId}
+              />
+            </div>
+          )}
+
+          {activeView === 'quick_scan' && (
+            // VISTA: ESCANEO RÁPIDO DE PDF
+            <div className="w-full">
+              <window.ClaimQuickScanView 
                 onAnalyzeEnd={handleAnalyzeEnd}
                 bypassGemini={bypassGemini}
                 setActiveView={setActiveView}

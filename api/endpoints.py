@@ -42,6 +42,7 @@ from services.anomaly_detector import AnomalyDetector
 from services.contingency_manager import ContingencyManager
 from services.claim_registry import ClaimRegistry
 from services.evidence_extractor import EvidenceExtractor
+from services.quick_scan_processor import QuickScanProcessor
 
 # Configuración de Router y Logger
 router = APIRouter(prefix="/api/v1", tags=["Claims & Fraud Analysis"])
@@ -235,8 +236,14 @@ async def analyze_claim(request: ClaimAnalysisRequest, req: Request) -> ClaimAna
         )
         
         # R8: Triangulación Geográfica (Haversine > 200km)
-        s_r8 = regla_triangulacion_geografica(df_siniestros, df_asegurados, df_proveedores)
-        anomalias_reglas["R8_TRIANGULACION_GEOGRAFICA"] = bool(s_r8.loc[df_siniestros["claim_id"] == claim_id].iloc[0])
+        lat_s = float(siniestro_data.get("lat_siniestro") or 0.0)
+        lon_s = float(siniestro_data.get("lon_siniestro") or 0.0)
+        if lat_s == 0.0 and lon_s == 0.0:
+            # Si no hay coordenadas GPS (Null Island), omitimos R8 para evitar falsos positivos
+            anomalias_reglas["R8_TRIANGULACION_GEOGRAFICA"] = False
+        else:
+            s_r8 = regla_triangulacion_geografica(df_siniestros, df_asegurados, df_proveedores)
+            anomalias_reglas["R8_TRIANGULACION_GEOGRAFICA"] = bool(s_r8.loc[df_siniestros["claim_id"] == claim_id].iloc[0])
         
         # R9: Smurfing Siniestros (Fraccionamiento de facturas)
         df_r9 = regla_smurfing_siniestros(df_siniestros)
@@ -629,7 +636,19 @@ async def analyze_claim(request: ClaimAnalysisRequest, req: Request) -> ClaimAna
                 evidence_refs=[f"file:///brokers/{broker_id}/analytics"]
             ))
             
-        if anomalias_reglas["R8_TRIANGULACION_GEOGRAFICA"]:
+        lat_s = float(siniestro_data.get("lat_siniestro") or 0.0)
+        lon_s = float(siniestro_data.get("lon_siniestro") or 0.0)
+        if lat_s == 0.0 and lon_s == 0.0:
+            # Caso de siniestro sin coordenadas geográficas: forzar alerta roja
+            sub_identidad += 45.0
+            alertas_identidad.append(AlertaSiniestro(
+                alert_id=f"ALT-{claim_id}-NO-GPS",
+                alert_type="SIN_UBICACION_GEOGRAFICA",
+                severity=NivelGravedad.CRITICAL,
+                description="🚨 SIN UBICACIÓN: El siniestro fue ingresado sin coordenadas de geolocalización. Requiere auditoría para verificar la veracidad física del incidente.",
+                evidence_refs=[]
+            ))
+        elif anomalias_reglas["R8_TRIANGULACION_GEOGRAFICA"]:
             sub_identidad += 30.0
             alertas_identidad.append(AlertaSiniestro(
                 alert_id=f"ALT-{claim_id}-R8",
@@ -788,12 +807,13 @@ async def analyze_claim(request: ClaimAnalysisRequest, req: Request) -> ClaimAna
             has_any_critical = True
             
         if has_any_critical:
-            # Si hay riesgo crítico (RUC inválido, facturas clonadas, fotos alteradas),
-            # forzamos que el Score sea al menos 88/100 (RIESGO ROJO), impidiendo la liquidación automática.
-            score_final = max(score_final, 88.0)
+            # Si hay riesgo crítico (RUC inválido, facturas clonadas, fotos alteradas, falta de GPS),
+            # forzamos que el Score sea dinámico en el rango crítico [75 - 95] para evitar puntuaciones planas
+            # pero bloqueando con absoluta seguridad la liquidación automática (umbral >= 70).
+            score_final = max(score_final, 75.0 + (score_final * 0.20))
         elif has_any_high:
-            # Si hay riesgo alto, el score compuesto debe ser al menos 65/100 (RIESGO AMARILLO)
-            score_final = max(score_final, 65.0)
+            # Si hay riesgo alto, el score compuesto debe ser dinámico en el rango [50 - 70]
+            score_final = max(score_final, 50.0 + (score_final * 0.20))
 
         # Mapeo a semáforo de riesgo consolidado
         risk_level = ColorSemaforo.VERDE
@@ -1231,5 +1251,44 @@ async def analizar_caligrafia_documento(file: UploadFile = File(...)) -> Dict[st
     )
 
     return result
+
+
+# ==============================================================================
+# ENDPOINT DE ESCANEO RÁPIDO DE PDF (POST /claims/quick-scan)
+# ==============================================================================
+
+@router.post("/claims/quick-scan")
+async def quick_scan_claim(
+    req: Request,
+    file: UploadFile = File(...),
+    bypass_gemini: bool = Form(False)
+) -> Dict[str, Any]:
+    """
+    Recibe un documento de siniestro en PDF, Word o Excel, extrae su contenido y crea
+    el siniestro, póliza, asegurado y proveedor correspondientes de forma automatizada.
+    """
+    ext = file.filename.lower()
+    if not (ext.endswith(".pdf") or ext.endswith(".xlsx") or ext.endswith(".xls") or ext.endswith(".docx") or ext.endswith(".doc")):
+        raise HTTPException(status_code=400, detail="Formato de archivo no soportado. Debe ser un archivo PDF, Word o Excel.")
+
+    try:
+        data_loader = req.app.state.data_loader
+        file_bytes = await file.read()
+        
+        # Llamar al QuickScanProcessor para procesar el siniestro
+        result = await QuickScanProcessor.process_quick_scan(
+            data_loader=data_loader,
+            file_bytes=file_bytes,
+            filename=file.filename,
+            bypass_gemini=bypass_gemini
+        )
+        
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.critical(f"Fallo al realizar Escaneo Rápido de Documento {file.filename}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno del servidor en Escaneo Rápido: {str(e)}")
 
 

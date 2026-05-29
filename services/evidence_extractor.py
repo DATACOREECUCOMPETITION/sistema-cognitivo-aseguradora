@@ -71,6 +71,62 @@ class EvidenceExtractor:
     ALLOWED_PDF_EXTS = {".pdf", ".doc", ".docx", ".xls", ".xlsx"}
 
     @classmethod
+    def limpiar_disclaimers_texto(cls, text: str) -> str:
+        """
+        Limpia leyendas de simulación, marcas de agua sintéticas y textos de prueba
+        para evitar falsos positivos o peritajes que hagan referencia a que es un documento simulado.
+        """
+        if not text:
+            return ""
+        
+        patrones = [
+            # "Este es un documento simulado correspondiente al Siniestro SIN-0035." o similar
+            r"(?i)este\s+es\s+un\s+documento\s+simulado\s+correspondiente\s+al\s+siniestro\s*[A-Za-z0-9-]*\.?",
+            # "documento simulado correspondiente al Siniestro SIN-0035"
+            r"(?i)documento\s+simulado\s+correspondiente\s+al\s+siniestro\s*[A-Za-z0-9-]*\.?",
+            # "Este es un documento simulado"
+            r"(?i)este\s+es\s+un\s+documento\s+simulado\.?",
+            # "documento simulado"
+            r"(?i)documento\s+simulado\.?",
+            # Otras leyendas de simulación/prueba
+            r"(?i)uso\s+exclusivo\s+para\s+evaluaci[oó]n\s+de\s+prototipo\s+ia\s+antifraude[^\n]*\.?",
+            r"(?i)caso:\s*[^|\n]+\|\s*muestra\s+generada[^\n]*\.?",
+            r"(?i)muestra\s+generada[^\n]*\.?",
+            r"(?i)documento\s+sint[eé]tico[^\n]*\.?",
+            r"(?i)documento\s+de\s+simulaci[oó]n[^\n]*\.?"
+        ]
+        
+        cleaned = text
+        for pat in patrones:
+            cleaned = re.sub(pat, "", cleaned)
+            
+        # Limpiar espacios múltiples y saltos de línea consecutivos sobrantes
+        cleaned = re.sub(r"[ \t]+", " ", cleaned)
+        cleaned = re.sub(r"\n\s*\n+", "\n\n", cleaned)
+        return cleaned.strip()
+
+    @classmethod
+    def limpiar_summary_dict(cls, summary: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """
+        Limpia de forma dinámica las menciones a documentos simulados dentro del diccionario de evidencias summary.
+        """
+        if not summary:
+            return summary
+        try:
+            doc = summary.get("document") or {}
+            if doc:
+                if "text_excerpt" in doc and isinstance(doc["text_excerpt"], str):
+                    doc["text_excerpt"] = cls.limpiar_disclaimers_texto(doc["text_excerpt"])
+                sheets = doc.get("sheets")
+                if sheets and isinstance(sheets, list):
+                    for sheet in sheets:
+                        if isinstance(sheet, dict) and "text_excerpt" in sheet and isinstance(sheet["text_excerpt"], str):
+                            sheet["text_excerpt"] = cls.limpiar_disclaimers_texto(sheet["text_excerpt"])
+        except Exception as e:
+            logger.error(f"Error limpiando summary dict: {e}")
+        return summary
+
+    @classmethod
     def ensure_claim_dirs(cls, claim_id: str) -> Dict[str, str]:
         base = os.path.join(cls.BASE_DIR, claim_id)
         images_dir = os.path.join(base, "images")
@@ -158,6 +214,7 @@ class EvidenceExtractor:
                 errors.append(f"pdf: {str(exc)}")
 
         summary = cls._build_summary(photos_metadata, pdf_metadata)
+        summary = cls.limpiar_summary_dict(summary)
 
         metadata_payload = {
             "claim_id": claim_id,
@@ -182,7 +239,7 @@ class EvidenceExtractor:
         try:
             with open(metadata_path, "r", encoding="utf-8") as handle:
                 payload = json.load(handle)
-            return payload.get("summary")
+            return cls.limpiar_summary_dict(payload.get("summary"))
         except Exception:
             return None
 
@@ -491,6 +548,7 @@ class EvidenceExtractor:
                     text_chunks.append(text.strip())
 
             text_full = "\n".join(text_chunks).strip()
+            text_full = cls.limpiar_disclaimers_texto(text_full)
             meta["has_text"] = bool(text_full)
             meta["text_excerpt"] = text_full[:4000]
             
@@ -539,6 +597,7 @@ class EvidenceExtractor:
             doc = DocxDocument(path)
             paragraphs = [p.text.strip() for p in doc.paragraphs if p.text and p.text.strip()]
             text_full = "\n".join(paragraphs).strip()
+            text_full = cls.limpiar_disclaimers_texto(text_full)
             meta["has_text"] = bool(text_full)
             meta["text_excerpt"] = text_full[:4000]
 
@@ -616,6 +675,7 @@ class EvidenceExtractor:
                                     
                     if lines:
                         sheet_text = "\n".join(lines)
+                        sheet_text = cls.limpiar_disclaimers_texto(sheet_text)
                         detected_dates = cls.extraer_fechas_del_texto(sheet_text)
                         text_montos = cls.extraer_montos_del_texto(sheet_text)
                         detected_montos = sorted(list(set(text_montos + raw_numeric_montos)))
@@ -683,6 +743,7 @@ class EvidenceExtractor:
                                     
                     if lines:
                         sheet_text = "\n".join(lines)
+                        sheet_text = cls.limpiar_disclaimers_texto(sheet_text)
                         detected_dates = cls.extraer_fechas_del_texto(sheet_text)
                         text_montos = cls.extraer_montos_del_texto(sheet_text)
                         detected_montos = sorted(list(set(text_montos + raw_numeric_montos)))
