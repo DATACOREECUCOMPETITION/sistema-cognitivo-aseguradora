@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es" class="bg-theme-bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aseguradora del Sur - Motor Cognitivo Antifraude</title>
+  <meta name="description" content="Plataforma de Auditoría Forense y Detección de Fraude en Siniestros Automotrices.">
+  
+  <!-- SEO & Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;450;500;600;700;850&family=Outfit:wght@400;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          },
+          colors: {
+            theme: {
+              bg: 'var(--theme-bg)',
+              surface: 'var(--theme-surface)',
+              panel: 'var(--theme-panel)',
+              border: 'var(--theme-border)',
+              textPrimary: 'var(--theme-text-primary)',
+              textSecondary: 'var(--theme-text-secondary)',
+              textMuted: 'var(--theme-text-muted)',
+              accent: 'var(--theme-accent)',
+              accentHover: 'var(--theme-accent-hover)',
+              cardBg: 'var(--theme-card-bg)',
+              inputBg: 'var(--theme-input-bg)',
+              inputText: 'var(--theme-input-text)',
+              inputBorder: 'var(--theme-input-border)',
+              
+              success: 'var(--theme-success)',
+              successText: 'var(--theme-success-text)',
+              successBg: 'var(--theme-success-bg)',
+              successBorder: 'var(--theme-success-border)',
+              
+              warning: 'var(--theme-warning)',
+              warningText: 'var(--theme-warning-text)',
+              warningBg: 'var(--theme-warning-bg)',
+              warningBorder: 'var(--theme-warning-border)',
+              
+              danger: 'var(--theme-danger)',
+              dangerText: 'var(--theme-danger-text)',
+              dangerBg: 'var(--theme-danger-bg)',
+              dangerBorder: 'var(--theme-danger-border)',
+              
+              info: 'var(--theme-info)',
+              infoText: 'var(--theme-info-text)',
+              infoBg: 'var(--theme-info-bg)',
+              infoBorder: 'var(--theme-info-border)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      /* Blanco Grisáceo / Slate Premium Corporativo (Opción A - Máximo Contraste y Seriedad Forense) */
+      --theme-bg: #dde3ed;           /* #dde3ed: fondo gris-cool táctico profundo y súper estable */
+      --theme-surface: #ffffff;      /* #ffffff: blanco puro en tarjetas para máximo contraste y legibilidad */
+      --theme-panel: #ffffff;        /* #ffffff: modales y paneles de alta definición */
+      --theme-border: #cbd5e1;       /* slate-300: contornos ultra nítidos y bien estructurados */
+      --theme-text-primary: #0f172a; /* slate-900: texto principal en alta definición */
+      --theme-text-secondary: #1e293b; /* slate-800: parágrafos con legibilidad extrema */
+      --theme-text-muted: #475569;     /* slate-600: metadatos perfectamente legibles */
+      --theme-accent: #4f46e5;       /* Indigo corporativo */
+      --theme-accent-hover: #3730a3; /* Indigo profundo en hover */
+      --theme-card-bg: #ffffff;      /* Blanco puro */
+      --theme-input-bg: #f8fafc;     /* slate-50: inputs en recuadro suave para destacar */
+      --theme-input-text: #0f172a;   /* Texto de inputs nítido */
+      --theme-input-border: #64748b; /* slate-500: bordes de campos muy nítidos */
+
+      /* Estado Semántico con alto contraste y saturación ideal */
+      --theme-success: #10b981;
+      --theme-success-text: #064e3b;  /* emerald-900: texto súper oscuro y legible */
+      --theme-success-bg: #f0fdf4;    /* emerald-50: fondo fresco */
+      --theme-success-border: #86efac; /* emerald-300 */
+
+      --theme-warning: #f59e0b;
+      --theme-warning-text: #78350f;  /* amber-900: contraste excelente */
+      --theme-warning-bg: #fffbeb;    /* amber-50 */
+      --theme-warning-border: #fcd34d; /* amber-300 */
+
+      --theme-danger: #f43f5e;
+      --theme-danger-text: #4c0519;   /* rose-950: contraste extremo para alertas */
+      --theme-danger-bg: #fff1f2;     /* rose-50 */
+      --theme-danger-border: #fca5a5;  /* rose-300 */
+
+      --theme-info: #3b82f6;
+      --theme-info-text: #1e3a8a;     /* blue-900 */
+      --theme-info-bg: #eff6ff;       /* blue-50 */
+      --theme-info-border: #93c5fd;   /* blue-300 */
+    }
+
+    /* Estilos globales y micro-animaciones */
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, .font-display {
+      font-family: 'Outfit', sans-serif;
+    }
+    /* Sombras Premium de Alta Definición y Elevación Física */
+    .shadow-sm {
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+    }
+    .shadow-md {
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 16px -6px rgba(15, 23, 42, 0.05) !important;
+    }
+    .shadow-xl {
+      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15), 0 12px 20px -8px rgba(15, 23, 42, 0.08) !important;
+    }
+    /* Animación de fundido sutil */
+    .animate-fade-in {
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Estilo de barra de scroll retro elegante */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.4);
+    }
+  </style>
+
+  <!-- React & React DOM (Production) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel Standalone (Para transpilación JSX en navegador) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="text-theme-textPrimary bg-theme-bg min-h-screen overflow-x-hidden selection:bg-indigo-500/30 selection:text-white">
+  
+  <div id="root">
+    <!-- Carga inicial estética -->
+    <div class="min-h-screen flex flex-col items-center justify-center bg-theme-bg text-theme-textSecondary">
+      <div class="h-10 w-10 border-2 border-theme-border border-t-theme-accent rounded-full animate-spin"></div>
+      <p class="mt-4 text-xs font-semibold tracking-wider text-theme-textMuted uppercase animate-pulse">
+        Inicializando Núcleo Analítico Híbrido...
+      </p>
+    </div>
+  </div>
+
+  <!-- Capa de Servicios -->
+  <script src="/static/src/services/claimsService.js"></script>
+
+  <!-- Componentes Modulares React (Compilación con Babel en tiempo real) -->
+  <script type="text/babel" src="/static/src/components/DashboardHelpers.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardClaimsTable.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardMetricCards.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardCategoryRow.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardAnalystNarratives.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardAlertModal.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardTechnicalModal.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardSemaphor.jsx"></script>
+  <script type="text/babel" src="/static/src/components/ChatInterface.jsx"></script>
+  <script type="text/babel" src="/static/src/components/ClaimCreateView.jsx"></script>
+  <script type="text/babel" src="/static/src/components/DashboardHandwriting.jsx"></script>
+  <script type="text/babel" src="/static/src/App.jsx"></script>
+
+  <!-- Script de Inicialización y Montaje en Babel (Ejecutado secuencialmente al final) -->
+  <script type="text/babel">
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<window.App />);
+  </script>
+
+</body>
+</html>

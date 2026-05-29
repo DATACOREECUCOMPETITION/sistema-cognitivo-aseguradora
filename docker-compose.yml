@@ -1,0 +1,114 @@
+version: "3.9"
+
+# ============================================================
+# Motor Antifraude v2.0.0 — Aseguradora del Sur
+# Infraestructura de Producción VPS
+# Dominio: index.datacoreecuadorcompetition.online
+# ============================================================
+
+services:
+
+  # ─────────────────────────────────────────────────────────
+  # APLICACIÓN FASTAPI (Motor Antifraude — Gunicorn + Uvicorn)
+  # ─────────────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: antifraude_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persistencia CRÍTICA: datos nunca se pierden al reiniciar
+      - ./data:/app/data
+      - ./REPORTES:/app/REPORTES
+    expose:
+      - "8000"
+    networks:
+      - antifraude_net
+    depends_on:
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ─────────────────────────────────────────────────────────
+  # NGINX — Reverse Proxy interno (localhost → app:8000)
+  # ─────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: antifraude_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app
+    networks:
+      - antifraude_net
+
+  # ─────────────────────────────────────────────────────────
+  # REDIS — Cache L2 (degradación suave si no disponible)
+  # ─────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: antifraude_redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    networks:
+      - antifraude_net
+
+  # ─────────────────────────────────────────────────────────
+  # CLOUDFLARE TUNNEL — index.datacoreecuadorcompetition.online
+  # Expone el dashboard principal al mundo sin abrir puertos
+  # ─────────────────────────────────────────────────────────
+  cloudflared-index:
+    image: cloudflare/cloudflared:latest
+    container_name: antifraude_cloudflared_index
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - TUNNEL_TOKEN=${TOKEN_INDEX}
+    command: tunnel run
+
+  # ─────────────────────────────────────────────────────────
+  # CLOUDFLARE TUNNEL — panel.datacoreecuadorcompetition.online
+  # ─────────────────────────────────────────────────────────
+  cloudflared-panel:
+    image: cloudflare/cloudflared:latest
+    container_name: antifraude_cloudflared_panel
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - TUNNEL_TOKEN=${TOKEN_PANEL}
+    command: tunnel run
+
+  # ─────────────────────────────────────────────────────────
+  # CLOUDFLARE TUNNEL — webhooks.datacoreecuadorcompetition.online
+  # ─────────────────────────────────────────────────────────
+  cloudflared-webhooks:
+    image: cloudflare/cloudflared:latest
+    container_name: antifraude_cloudflared_webhooks
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - TUNNEL_TOKEN=${TOKEN_WEBHOOKS}
+    command: tunnel run
+
+volumes:
+  redis_data:
+
+networks:
+  antifraude_net:
+    driver: bridge
