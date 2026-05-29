@@ -1,46 +1,15 @@
-# Archivos temporales de Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.pyc
-*.pyo
+# Infraestructura, Red y Proxy — NO van al repositorio público
+PROXY/
+nginx.conf
+docker-compose.yml
+Dockerfile
 
-# Entorno virtual — NO va al VPS, se reconstruye allá
-.venv/
-venv/
-env/
-ENV/
+# Reportes, Handoffs y Bitácoras de Recuperación
+REPORTES/
+HANDOFF.md
+GUIA_RECUPERACION_TOTAL.md
 
-# Variables de entorno con secretos — NUNCA al repositorio
-.env
-
-# Carpeta de evidencias — datos del cliente, no van en git
-# (en el VPS se monta como volumen Docker)
-data/uploads/
-
-# Logs
-*.log
-handwriting_debug.log
-
-# IDEs y editores
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# macOS
-.DS_Store
-
-# Pytest y tests
-.pytest_cache/
-tests/__pycache__/
-
-# Carpetas de basura
-BASURA/
-scratch/
-scratch_test_call.py
-test_*.py
-run_local_test.py
-
-# Redis dump local
-dump.rdb
+# Plantillas de entorno
+.env.example
+# Datasets físicos con información fiscal (RUCs)
+data/raw/
