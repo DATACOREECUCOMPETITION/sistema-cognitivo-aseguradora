@@ -1,3 +1,3 @@
-id_asegurado,segmento,antiguedad_meses,ciudad,numero_polizas,score_cliente
-ASEG-0001,VIP,48,Quito,2,95
-ASEG-0002,ESTANDAR,12,Guayaquil,1,80
+asegurado_id,nombre_completo,identificador_fiscal,estres_financiero,lat_domicilio,lon_domicilio
+ASEG-9001,Asegurado Sintetico Uno,1700000001001,False,-0.1806,-78.4678
+ASEG-9002,Asegurado Sintetico Dos,0900000002001,True,-2.1894,-79.8890
