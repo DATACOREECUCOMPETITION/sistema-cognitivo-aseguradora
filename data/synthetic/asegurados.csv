@@ -1,0 +1,3 @@
+id_asegurado,segmento,antiguedad_meses,ciudad,numero_polizas,score_cliente
+ASEG-0001,VIP,48,Quito,2,95
+ASEG-0002,ESTANDAR,12,Guayaquil,1,80

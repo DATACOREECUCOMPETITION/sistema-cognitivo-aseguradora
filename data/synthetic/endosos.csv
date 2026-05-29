@@ -1,0 +1,3 @@
+id_endoso,id_poliza,tipo_endoso,fecha_endoso,valor_modificado
+END-001,POL-1001,INCLUSION_VEHICULO,2026-01-15,0.00
+END-002,POL-1002,MODIFICACION_COBERTURA,2026-02-10,150.00

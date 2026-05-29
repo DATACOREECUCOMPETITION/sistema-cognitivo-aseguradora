@@ -1,0 +1,3 @@
+id_siniestro,id_poliza,id_asegurado,ramo,cobertura,fecha_ocurrencia,fecha_reporte,monto_reclamado,estado,documentos_completos
+SIN-2026-01,POL-1001,ASEG-0001,VEHICULOS,CHOQUE,2026-05-20,2026-05-22,1500.00,Liquidado,SI
+SIN-2026-02,POL-1002,ASEG-0002,SALUD,ATENCION_MEDICA,2026-05-24,2026-05-25,320.00,Reserva,SI

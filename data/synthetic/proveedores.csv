@@ -1,0 +1,3 @@
+id_proveedor,tipo,ciudad,monto_promedio_reclamado,porcentaje_casos_observados
+PROV-9999,TALLER,Quito,1200.00,0.05
+PROV-8888,CLINICA,Guayaquil,450.00,0.02
